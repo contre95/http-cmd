@@ -38,18 +38,6 @@ jobs:
         with:
           name: binaries
 
-      # Create release (optional)
-      - name: Create release
-        if: ${{ github.event.action == 'created' }}
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.sha }}
-          release_name: ${{ github.sha }}
-          body: |
-            This is a release for commit ${{ github.sha }}
-
       # Upload artifact to release
       - name: Upload artifact to release
         if: ${{ github.event.action == 'created' }}
