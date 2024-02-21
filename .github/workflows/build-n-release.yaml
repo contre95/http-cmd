@@ -48,8 +48,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${SHORT_SHA}
-          release_name: ${SHORT_SHA}
+          tag_name: ${{ env.GITHUB_SHA_SHORT }}
+          release_name: ${{ env.GITHUB_SHA_SHORT }}
           body: |
             This is a release for commit ${{ github.sha }}
 
@@ -59,7 +59,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ github.event.releases.upload_url }}
+          upload_url: ${{ github.event.release.upload_url }}
           asset_path: http-cmds
           asset_content_type: application/octet-stream
 
