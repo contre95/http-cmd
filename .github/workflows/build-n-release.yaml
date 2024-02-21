@@ -27,15 +27,17 @@ jobs:
       
     - name: Extract version
       id: extract_version
-      run: echo ::set-output name=VERSION::${{ steps.latest_tag.outputs.TAG }}
-      
-    - name: Replace 'v' with ''
-      id: remove_v_prefix
-      run: echo ::set-output name=VERSION::${{ steps.extract_version.outputs.VERSION | sed 's/v//' }}
+      run: echo ::set-output name=VERSION::$(echo "${{ steps.latest_tag.outputs.TAG }}" | sed 's/v//')
       
     - name: Increment version
       id: increment_version
-      run: echo ::set-output name=NEW_VERSION::$(echo "${{ steps.remove_v_prefix.outputs.VERSION }}" | awk -F. '{$NF = $NF + 1;} 1' | sed 's/ /./g')
+      run: |
+        OLD_VERSION="${{ steps.extract_version.outputs.VERSION }}"
+        IFS='.' read -r -a VERSION_PARTS <<< "$OLD_VERSION"
+        LAST_PART=${VERSION_PARTS[-1]}
+        ((LAST_PART++))
+        NEW_VERSION="${VERSION_PARTS[@]:0:2}.$LAST_PART"
+        echo ::set-output name=NEW_VERSION::$NEW_VERSION
       
     - name: Create Release
       id: create_release
@@ -58,3 +60,4 @@ jobs:
         asset_path: ./http-cmds
         asset_name: http-cmds
         asset_content_type: application/octet-stream
+
