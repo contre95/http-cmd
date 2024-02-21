@@ -1,64 +1,70 @@
-name: Build and Release
+name: Build and Release Go Binary with Versioning
 
 on:
   push:
-    branches:
-      - main  # change this to your main branch name
+    branches: [ main ]
+  release:
+    types: [ created ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-      
-    - name: Set up Go
-      uses: actions/setup-go@v2
-      with:
-        go-version: 1.22  # change this to your Go version
-        
-    - name: Build
-      run: go build -o http-cmds .
-      
-    - name: Get latest tag
-      id: latest_tag
-      run: echo ::set-output name=TAG::$(git describe --abbrev=0 --tags)
-      
-    - name: Extract version
-      id: extract_version
-      run: echo ::set-output name=VERSION::$(echo "${{ steps.latest_tag.outputs.TAG }}" | sed 's/v//')
-      
-    - name: Increment version
-      id: increment_version
-      run: |
-        OLD_VERSION="${{ steps.extract_version.outputs.VERSION }}"
-        IFS='.' read -r -a VERSION_PARTS <<< "$OLD_VERSION"
-        LAST_INDEX=$(( ${#VERSION_PARTS[@]} - 1 ))
-        LAST_PART=${VERSION_PARTS[$LAST_INDEX]}
-        ((LAST_PART++))
-        NEW_VERSION="${VERSION_PARTS[@]:0:$LAST_INDEX}.$LAST_PART"
-        echo ::set-output name=NEW_VERSION::$NEW_VERSION
-      
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: v${{ steps.increment_version.outputs.NEW_VERSION }}
-        release_name: Release ${{ steps.increment_version.outputs.NEW_VERSION }}
-        draft: false
-        prerelease: false
-        
-    - name: Upload Release Asset
-      id: upload-release-asset
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./http-cmds
-        asset_name: http-cmds
-        asset_content_type: application/octet-stream
+      - uses: actions/checkout@v3
 
+      # Use GitHub-managed Go environment
+      - name: Setup Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.22
+
+      # Get current version
+      - name: Get current version
+        uses: mmuller-fe/version-semver@v1
+        id: version
+
+      # Set next version
+      - name: Set next version
+        run: echo "NEXT_VERSION=$(echo ${{ steps.version.outputs.latest }} | semver bump patch)"
+
+      # Build the binary with versioning information
+      - name: Build
+        run: go build -o http-cmds -ldflags "-X main.Version=${{ steps.version.outputs.latest }}" .
+
+      # Upload artifacts
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: binaries
+          path: bin/http-cmds
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: binaries
+
+      # Create release
+      - name: Create release
+        if: ${{ github.event.action == 'created' }}
+        uses: actions/create-release@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.version.outputs.next }}
+          release_name: "v${{ steps.version.outputs.next }}"
+          body: |
+            This is a release for commit ${{ github.sha }}
+
+      # Upload artifact to release
+      - name: Upload artifact to release
+        if: ${{ github.event.action == 'created' }}
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.releases.upload_url }}
+          asset_path: http-cmds
