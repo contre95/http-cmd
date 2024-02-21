@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"os/exec"
@@ -15,6 +16,7 @@ func handleListShaders(w http.ResponseWriter, r *http.Request) {
 	// Execute the command
 	output, err := cmd.CombinedOutput()
 	if err != nil {
+		log.Println(err)
 		http.Error(w, "Failed to execute command", http.StatusInternalServerError)
 		return
 	}
@@ -26,12 +28,14 @@ func handleListShaders(w http.ResponseWriter, r *http.Request) {
 func handleApplyShader(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		log.Println("Method not allowed")
 		return
 	}
 	// Get the command from the request body
 	shader := r.FormValue("shader")
 	if shader == "" {
 		http.Error(w, "No command provided", http.StatusBadRequest)
+		log.Println("No command provided")
 		return
 	}
 	// Define the command to execute
@@ -40,6 +44,7 @@ func handleApplyShader(w http.ResponseWriter, r *http.Request) {
 	output, err := execCmd.CombinedOutput()
 	if err != nil {
 		http.Error(w, "Failed to execute command", http.StatusInternalServerError)
+		log.Println(err)
 		return
 	}
 
@@ -58,6 +63,7 @@ func handleResetShader(w http.ResponseWriter, r *http.Request) {
 	// Execute the command
 	output, err := execCmd.CombinedOutput()
 	if err != nil {
+		log.Println(err)
 		http.Error(w, "Failed to execute command", http.StatusInternalServerError)
 		return
 	}
