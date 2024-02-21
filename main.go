@@ -84,6 +84,6 @@ func main() {
 	if len(os.Args) > 1 {
 		port = os.Args[1]
 	}
-	fmt.Println("Server listening on :" + port)
+	fmt.Println("Hi, server listening on :" + port)
 	http.ListenAndServe(":"+port, nil)
 }
