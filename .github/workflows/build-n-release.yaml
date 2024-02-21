@@ -39,14 +39,18 @@ jobs:
         with:
           name: binaries
 
+      - name: Set outputs
+        id: vars
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
       - name: Create release
         # if: ${{ github.event.action == 'created' }}
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: latest
-          release_name: latest
+          tag_name: ${{ steps.vars.outputs.sha_short }}
+          release_name: ${{ steps.vars.outputs.sha_short }}
           body: |
             This is a release for commit ${{ github.sha }}
 
