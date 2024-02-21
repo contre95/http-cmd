@@ -33,6 +33,8 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     permissions: write-all
+    outputs:
+      upload_url: ${{ steps.step_upload_url.outputs.upload_url }}
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v3
@@ -59,7 +61,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ github.event.release.upload_url }}
+          upload_url: ${{ needs.release.outputs.upload_url
           asset_path: http-cmds
           asset_content_type: application/octet-stream
 
