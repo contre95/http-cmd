@@ -19,7 +19,7 @@ jobs:
         go-version: 1.22  # change this to your Go version
         
     - name: Build
-      run: go build -o myprogram ./path/to/your/go/package
+      run: go build -o http-cmds .
       
     - name: Get latest tag
       id: latest_tag
