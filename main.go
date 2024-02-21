@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"os/exec"
 )
 
@@ -73,6 +74,10 @@ func main() {
 	http.HandleFunc("/reset", handleResetShader)
 
 	// Start the HTTP server
-	fmt.Println("Server listening on :8080")
-	http.ListenAndServe(":8080", nil)
+	port := "8080"
+	if len(os.Args) > 1 {
+		port = os.Args[1]
+	}
+	fmt.Println("Server listening on :" + port)
+	http.ListenAndServe(":"+port, nil)
 }
