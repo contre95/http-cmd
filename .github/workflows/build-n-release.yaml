@@ -20,14 +20,14 @@ jobs:
 
       # Build the binary
       - name: Build
-        run: go build -o http-cmds .
+        run: go build -o http-cmd .
 
       # Upload artifacts
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
           name: binaries
-          path: http-cmds
+          path: http-cmd
 
   release:
     needs: build
@@ -61,8 +61,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url:  ${{ steps.create_release.outputs.upload_url }}
-          asset_path: http-cmds
-          asset_name: http-cmds
+          asset_path: http-cmd
+          asset_name: http-cmd
           asset_content_type: application/octet-stream
 
 
