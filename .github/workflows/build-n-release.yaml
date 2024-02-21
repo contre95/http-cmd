@@ -1,0 +1,57 @@
+name: Build and Release
+
+on:
+  push:
+    branches:
+      - main  # change this to your main branch name
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.17  # change this to your Go version
+        
+    - name: Build
+      run: go build -o myprogram ./path/to/your/go/package
+      
+    - name: Get latest tag
+      id: latest_tag
+      run: echo ::set-output name=TAG::$(git describe --abbrev=0 --tags)
+      
+    - name: Extract version
+      id: extract_version
+      run: echo ::set-output name=VERSION::${{ steps.latest_tag.outputs.TAG | sed 's/v\(.*\)/\1/' }}
+      
+    - name: Increment version
+      id: increment_version
+      run: echo ::set-output name=NEW_VERSION::$(echo "${{ steps.extract_version.outputs.VERSION }}" | awk -F. '{$NF = $NF + 1;} 1' | sed 's/ /./g')
+      
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v${{ steps.increment_version.outputs.NEW_VERSION }}
+        release_name: Release ${{ steps.increment_version.outputs.NEW_VERSION }}
+        draft: false
+        prerelease: false
+        
+    - name: Upload Release Asset
+      id: upload-release-asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./http-cmds
+        asset_name: http-cmds
+        asset_content_type: application/octet-stream
+
