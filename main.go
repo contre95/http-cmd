@@ -39,14 +39,17 @@ func handleApplyShader(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Define the command to execute
-	execCmd := exec.Command("sh", "-c", fmt.Sprintf("hyprctl keyword decoration:screen_shader %s/%s", SHADERS_PATH, shader))
+	exec.Command("/usr/bin/hyprctl", "reload")
+	execCmd := exec.Command("/usr/bin/hyprctl", "keyword", fmt.Sprintf("decoration:screen_shader %s/%s", SHADERS_PATH, shader))
 	// Execute the command
 	output, err := execCmd.CombinedOutput()
 	if err != nil {
 		http.Error(w, "Failed to execute command", http.StatusInternalServerError)
 		log.Println(err)
+		log.Println(execCmd.Environ())
 		return
 	}
+	log.Println(execCmd.Environ())
 
 	// Write the command output as the HTTP response
 	w.Header().Set("Content-Type", "text/plain")
@@ -59,7 +62,8 @@ func handleResetShader(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Define the command to execute
-	execCmd := exec.Command("sh", "-c", "hyprctl keyword decoration:screen_shader [[EMPTY]]")
+	exec.Command("/usr/bin/hyprctl", "reload")
+	execCmd := exec.Command("/bin/hyprctl", "keyword", "decoration:screen_shader [[EMPTY]]")
 	// Execute the command
 	output, err := execCmd.CombinedOutput()
 	if err != nil {
