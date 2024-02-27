@@ -45,7 +45,6 @@ func handleApplyShader(w http.ResponseWriter, r *http.Request) {
 	output, err := execCmd.CombinedOutput()
 	if err != nil {
 		http.Error(w, "Failed to execute command", http.StatusInternalServerError)
-		log.Println(err)
 		log.Println(execCmd.Environ())
 		return
 	}
@@ -56,6 +55,10 @@ func handleApplyShader(w http.ResponseWriter, r *http.Request) {
 	w.Write(output)
 }
 
+func handleExit(w http.ResponseWriter, r *http.Request) {
+	log.Println("Exiting the program !")
+	os.Exit(0)
+}
 func handleResetShader(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -82,6 +85,7 @@ func main() {
 	http.HandleFunc("/shaders", handleListShaders)
 	http.HandleFunc("/shade", handleApplyShader)
 	http.HandleFunc("/reset", handleResetShader)
+	http.HandleFunc("/exit", handleExit)
 
 	// Start the HTTP server
 	port := "8080"
